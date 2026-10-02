@@ -18,6 +18,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run test:control
       - run: npm run lint
       - run: npm run build
       - name: Upload Pages artifact

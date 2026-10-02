@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "api": "node control/server.mjs",
+    "agent:enroll": "node agent/agent.mjs enroll",
+    "agent:run": "node agent/agent.mjs run",
+    "test:control": "node --test control/server.test.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.49.0",

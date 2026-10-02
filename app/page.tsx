@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import ServerConsole from "./server-console";
 import {
   Activity,
   ArrowDownToLine,
@@ -27,11 +28,12 @@ import {
   Wifi,
 } from "lucide-react";
 
-type Section = "overview" | "routes" | "protocols" | "activity";
+type Section = "overview" | "servers" | "routes" | "protocols" | "activity";
 type RouteDraft = { id: number; match: string; action: string };
 
 const navigation: { id: Section; label: string; icon: typeof Activity }[] = [
   { id: "overview", label: "总览", icon: Gauge },
+  { id: "servers", label: "服务器接入", icon: Server },
   { id: "routes", label: "路由策略", icon: Route },
   { id: "protocols", label: "协议与网关", icon: Waypoints },
   { id: "activity", label: "操作记录", icon: Activity },
@@ -107,7 +109,7 @@ export default function Home() {
         </nav>
 
         <p className="nav-caption nav-caption-spaced">资源</p>
-        <button className="nav-item" onClick={() => setNotice("Agent 尚未接入；目前没有可管理的真实网关。")}><Server size={17} /><span>网关与节点</span></button>
+        <button className={`nav-item ${section === "servers" ? "is-active" : ""}`} onClick={() => setSection("servers")}><Server size={17} /><span>网关与节点</span></button>
         <button className="nav-item" onClick={() => setNotice("监控数据需要 Agent 上报后才会显示。") }><Activity size={17} /><span>链路监控</span></button>
         <button className="nav-item" onClick={() => setNotice("DNS 配置通道尚未接入 Agent。") }><Globe2 size={17} /><span>DNS 与解析</span></button>
 
@@ -140,7 +142,7 @@ export default function Home() {
             <>
               <div className="page-heading">
                 <div><p className="eyebrow">NETWORK OPERATIONS / 01</p><h1>网络总览</h1><p className="heading-sub">查看节点、链路和流量状态。</p></div>
-                <button className="button button-dark" onClick={() => setNotice("Agent 注册服务尚未部署；目前不能接收节点。") }><Plus size={16} />添加 Agent</button>
+                <button className="button button-dark" onClick={() => setSection("servers")}><Plus size={16} />添加服务器</button>
               </div>
 
               <section className="metric-grid" aria-label="网络指标">
@@ -174,6 +176,8 @@ export default function Home() {
               </div>
             </>
           )}
+
+          {section === "servers" && <ServerConsole onNotice={setNotice} />}
 
           {section === "routes" && (
             <>

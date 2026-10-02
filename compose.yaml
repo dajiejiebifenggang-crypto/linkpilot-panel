@@ -1,0 +1,28 @@
+services:
+  web:
+    build: .
+    command: ["npm", "start"]
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "127.0.0.1:3000:3000"
+    restart: unless-stopped
+
+  control:
+    build: .
+    command: ["npm", "run", "api"]
+    environment:
+      LINKPILOT_HOST: 0.0.0.0
+      LINKPILOT_PORT: 8787
+      LINKPILOT_ADMIN_TOKEN: ${LINKPILOT_ADMIN_TOKEN:?Set LINKPILOT_ADMIN_TOKEN in .env}
+      LINKPILOT_ALLOWED_ORIGINS: ${LINKPILOT_ALLOWED_ORIGINS:-http://localhost:3000}
+      LINKPILOT_DATA_DIR: /var/lib/linkpilot
+    ports:
+      - "127.0.0.1:8787:8787"
+    volumes:
+      - linkpilot-data:/var/lib/linkpilot
+    restart: unless-stopped
+
+volumes:
+  linkpilot-data:

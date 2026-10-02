@@ -19,6 +19,10 @@
 
 # production
 /build
+/data/
+/control/data/
+/etc/linkpilot/
+agent.json
 
 # misc
 .DS_Store

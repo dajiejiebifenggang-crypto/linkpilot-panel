@@ -1,38 +1,50 @@
 # LinkPilot
 
-网络中继与网关控制面板的安全优先 MVP。当前交付的是可运行的前端原型，不是路由器固件或 VPN 服务端。
+安全优先的网络中继控制面 MVP。v0.2 增加自托管控制 API 与 Linux 遥测 Agent，可登记服务器并查看实时系统状态和已登记节点间的 TCP 探测。GitHub Pages 只托管静态前端；真实数据需要单独运行控制 API。
 
-## 本地运行
+## 本地开发
 
-需要 Node.js 20.9 或更新版本。
+需要 Node.js 20.9+。在两个 PowerShell 终端运行：
 
 ```powershell
 npm ci
-npm run dev
+$env:LINKPILOT_ADMIN_TOKEN = ([guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N'))
+$env:LINKPILOT_ALLOWED_ORIGINS = 'http://localhost:3000'
+npm run api
 ```
 
-在浏览器打开 `http://localhost:3000`。生产检查：
+另一个终端运行 `npm run dev`，打开 `http://localhost:3000`。在“服务器接入”页填 `http://localhost:8787` 和刚生成的令牌。管理员令牌只留在当前页面内存，不写入 `localStorage`。
 
 ```powershell
+npm run test:control
 npm run lint
 npm run build
 ```
 
+完整 Linux/Docker、TLS 反代、FRP/NAT 与 Agent 部署步骤见 [docs/deployment.md](docs/deployment.md)。
+
+## v0.2 已实现
+
+- 一次性、15 分钟有效的 Agent 注册令牌；注册后生成独立节点令牌，服务端仅存哈希。
+- Linux Agent 每 10 秒上报 CPU、内存、磁盘、运行时间和网卡吞吐；系统配置详情包含发行版、内核、CPU/容量和网卡名称，不收集 MAC/IP。
+- 控制台每 5 秒刷新，显示最近 360 个样本；连续 30 秒无心跳视为离线。
+- 对管理员登记的节点端点执行 3 次 TCP connect 探测，展示 RTT 和 TCP 连接失败率；FRP 模式可使用 FRPS 映射端点。
+- Agent systemd 服务使用专用无登录 `linkpilot` 用户；服务只采集和上报，不执行任意 shell 命令。
+- API 默认绑定 `127.0.0.1`，管理员令牌至少 32 字节；远程 Agent 控制链接必须 HTTPS。跨域来源通过精确的 `LINKPILOT_ALLOWED_ORIGINS` 配置。
+
 ## 代码结构
 
-- `app/page.tsx`：主控制台与交互状态。导航切换总览、路由策略、协议目录和操作记录；路由表单生成仅驻留内存的草稿，并允许导出 JSON。
-- `app/globals.css`：运维控制台样式、状态色、表格、图表占位、移动端布局和减少动画偏好支持。
-- `app/layout.tsx`：中文文档语言、站点标题及全局字体。
-- `.github/workflows/ci.yml`：推送/PR 时运行 ESLint 和生产构建。
+- `app/page.tsx`：控制台导航、路由草稿和总览。
+- `app/server-console.tsx`：API 连接、内存令牌状态、服务器登记向导、实时指标和节点互探。
+- `control/server.mjs`：无第三方运行依赖的 Node HTTP API、鉴权、一次性注册、状态存储与遥测校验。
+- `control/server.test.mjs`：端到端测试注册令牌重放、认证、心跳和节点互探。
+- `agent/agent.mjs`：Linux 只读采集器、心跳、探测和受限 systemd 安装。
+- `agent/install.sh`：Linux 一键安装入口。
+- `compose.yaml` / `Dockerfile`：自托管前端和 API 服务。
+- `.github/workflows/ci.yml`：运行 API 测试、ESLint、构建并发布 GitHub Pages。
 
-## 状态与演示数据
+## 尚未实现
 
-默认没有连接任何 Agent：节点显示“未接入”，延迟、丢包和吞吐为 `—`，操作不会触达服务器。右上角“演示数据”开关开启后，页面展示标有“演示”的静态示例；它不代表真实线路。路由草稿只存在当前页面内存中，刷新或离开页面即丢失；导出操作仅下载 JSON，应用按钮保持禁用。
+当前 mesh 视图是 TCP 可达性探测，不会创建 WireGuard/IPsec 隧道；路由分流仍是本地草稿。Gost、Realm、SD-WAN、L2TP、OpenVPN、WireGuard 和 IPsec/IKEv2 目前为能力目录，尚无真实安装/配置适配器、密钥生命周期、审批/回滚或服务端执行流程。不要将当前版本当作爱快替代品或直接用于无人值守的生产网络变更。
 
-协议目录包含 Gost、Realm、SD-WAN、L2TP、OpenVPN、WireGuard、IPsec/IKEv2。它们目前只是计划接入的能力目录，尚未实现管理 API、服务端 Agent、协议适配器、真实遥测或设备配置下发。
-
-## 生产化边界
-
-完整的路由/SD-WAN 控制需要独立的受认证 Agent 和最小权限执行器。建议先定义版本化 API、设备身份与 mTLS、RBAC、签名配置、变更审批/回滚、审计存储和探测上报，再逐个实现 Gost/Realm/VPN adapter。不要让公开 Web 前端持有 SSH/root 凭据，也不要通过浏览器直接执行 shell 命令。
-
-此仓库可公开；不要提交私钥、API token、服务器配置或个人节点链接。`.env*` 已被 Git 忽略。
+API 使用单实例 JSON 状态文件，不提供 HA、多写入器或数据库备份策略。公开仓库不要提交 `.env`、节点链接、服务器凭据或私钥；运行时 `.env*`、Agent 凭据和数据目录均被 Git 忽略。
