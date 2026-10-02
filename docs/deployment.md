@@ -11,7 +11,7 @@ The agent does not execute shell commands after installation, change routes, ins
 ## Requirements
 
 - Control host: Node.js 20.9+; for Docker, Docker Engine and Compose v2.
-- Agent host: Debian/Ubuntu Linux and Node.js 18+. The installer can install Debian's `nodejs` package when missing.
+- Agent host: Debian/Ubuntu or CentOS Stream/RHEL-compatible Linux with systemd and Node.js 18+. The installer supports `apt-get`, `dnf`, and `yum` when Node.js is missing.
 - Agents need outbound HTTPS access to the control API. They do not require inbound SSH or a public IP for heartbeats.
 - Public deployments require TLS. Do not expose port 8787 directly to the Internet.
 
@@ -48,7 +48,7 @@ npm run build
 
 ## Self-hosted control plane with Docker
 
-1. Clone the public repository on a server with Docker Compose installed.
+1. Clone the public repository on a server with Docker Compose installed. The control service itself is OS-agnostic; Docker Compose is the recommended single-host path for Debian, Ubuntu, CentOS Stream, Rocky, AlmaLinux, or RHEL.
 2. Create a private environment file and strong administrator token:
 
 ```bash
@@ -116,6 +116,20 @@ journalctl -u linkpilot-agent -n 100 --no-pager
 ```
 
 To remove a node from the control panel, use its remove action. That revokes its stored node identity but intentionally does not remotely uninstall software. Uninstall on the node with `systemctl disable --now linkpilot-agent`, then remove `/etc/linkpilot/agent.json`, `/etc/systemd/system/linkpilot-agent.service`, `/opt/linkpilot/agent.mjs`, and the `linkpilot` system user.
+
+### CentOS Stream / RHEL-compatible hosts
+
+CentOS Stream 9, Rocky Linux 8/9, AlmaLinux 8/9, and current RHEL releases are the intended RPM-family targets. CentOS Linux 7 is end-of-life and is not guaranteed. Check the platform before enrolling:
+
+```bash
+cat /etc/os-release
+node --version
+systemctl --version
+```
+
+The installer uses `dnf` or `yum` for `nodejs`, `curl`, and CA certificates if needed. It requires Node.js 18 or newer; if the enabled distro stream provides an older Node.js, enable a supported Node.js 18/20 stream or install a supported release before rerunning. On SELinux systems the installer runs `restorecon` on Agent paths when available. Keep SELinux enforcing; do not disable it to make enrollment work.
+
+For firewalld/security groups, allow outbound TCP 443 from each Agent to the HTTPS control endpoint. Do not open an inbound management port for the Agent. If using direct peer probes, allow only the selected probe service/port between participating nodes. If using FRP, expose only the dedicated FRPS transport and mapped ports required by your FRP deployment.
 
 ## FRP / NAT notes
 

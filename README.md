@@ -26,7 +26,7 @@ npm run build
 ## v0.2 已实现
 
 - 一次性、15 分钟有效的 Agent 注册令牌；注册后生成独立节点令牌，服务端仅存哈希。
-- Linux Agent 每 10 秒上报 CPU、内存、磁盘、运行时间和网卡吞吐；系统配置详情包含发行版、内核、CPU/容量和网卡名称，不收集 MAC/IP。
+- Debian/Ubuntu/CentOS Stream/RHEL 系 Linux Agent 每 10 秒上报 CPU、内存、磁盘、运行时间和网卡吞吐；系统配置详情包含发行版、内核、CPU/容量和网卡名称，不收集 MAC/IP。
 - 控制台每 5 秒刷新，显示最近 360 个样本；连续 30 秒无心跳视为离线。
 - 对管理员登记的节点端点执行 3 次 TCP connect 探测，展示 RTT 和 TCP 连接失败率；FRP 模式可使用 FRPS 映射端点。
 - Agent systemd 服务使用专用无登录 `linkpilot` 用户；服务只采集和上报，不执行任意 shell 命令。
