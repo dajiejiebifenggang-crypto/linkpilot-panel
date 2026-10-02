@@ -48,7 +48,7 @@ const protocolList = [
 ];
 
 const sampleNodes = [
-  { name: "US · Los Angeles", address: "156.229.163.253", role: "中转节点", protocol: "HY2 / VLESS", latency: "148 ms", loss: "0.2%", traffic: "42.8 Mbps" },
+  { name: "US · Edge-01", address: "198.51.100.10", role: "中转节点", protocol: "HY2 / VLESS", latency: "148 ms", loss: "0.2%", traffic: "42.8 Mbps" },
   { name: "TW · Taipei edge", address: "等待 Agent 注册", role: "出口网关", protocol: "WireGuard", latency: "31 ms", loss: "0.0%", traffic: "18.4 Mbps" },
   { name: "CN · Branch-01", address: "等待 Agent 注册", role: "SD-WAN 站点", protocol: "IKEv2", latency: "22 ms", loss: "0.1%", traffic: "8.2 Mbps" },
 ];
@@ -114,7 +114,7 @@ export default function Home() {
         <div className="sidebar-bottom">
           <div className="agent-mini"><span className="status-dot offline" /><span><strong>控制面</strong><small>Agent 未连接</small></span><span className="agent-pill">离线</span></div>
           <button className="nav-item" onClick={() => setNotice("设置界面将在接入认证与 Agent 管理 API 后开放。")}><Settings2 size={17} /><span>设置</span></button>
-          <div className="user-row"><span className="avatar">DL</span><span><strong>dajiejie</strong><small>管理员</small></span><CircleHelp size={16} className="muted-icon" /></div>
+          <div className="user-row"><span className="avatar">NO</span><span><strong>Network Ops</strong><small>管理员</small></span><CircleHelp size={16} className="muted-icon" /></div>
         </div>
       </aside>
 
