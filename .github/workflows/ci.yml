@@ -1,7 +1,8 @@
-name: CI
+name: Build and deploy
 
 on:
   push:
+    branches: [main]
   pull_request:
 
 permissions:
@@ -19,3 +20,23 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      - name: Upload Pages artifact
+        if: github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
